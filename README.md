@@ -129,6 +129,93 @@ The API includes proper error handling for:
 - Invalid genre types
 - Malformed requests
 
+  Setup and Deployment
+1️⃣ Creating a Google Cloud Virtual Machine (VM)
+Navigate to Google Cloud Console
+Go to Compute Engine → VM Instances
+Click Create Instance and configure:
+
+- Machine type: e2-micro
+- Firewall settings: Allow HTTP & HTTPS
+Click Create and note the External IP Address
+
+## Connecting to the VM
+Click on SSH to connect to the VM
+
+## Installing Dependencies
+Inside the VM, run:
+sudo apt update && sudo apt upgrade -y
+Also install other dependencies like python, uvicorn
+
+clone the repository inside the VM:
+
+git clone https://github.com/hng12-devbotops/fastapi-book-project.git
+cd fastapi-book-project
+
+Setting Up and Running FastAPI
+
+- cd fastapi-book-project
+- python3 -m venv venv
+- source venv/bin/activate
+- pip install -r requirements.txt
+- uvicorn main:app --host 0.0.0.0 --port 8000
+
+- Open http://<vm-external-ip>:8000/docs in your browser.
+
+## Running FastAPI in the Background
+This is to prevent the app from stopping after logout
+
+## Setting Up Nginx as a Reverse Proxy
+To serve FastAPI on port 80 (HTTP):
+
+Install Nginx:
+
+sudo apt install nginx -y
+Configure Nginx:
+sudo nano /etc/nginx/sites-available/fastapi
+Add the following:
+server {
+    listen 80;
+    server_name <your-vm-external-ip>;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+Enable the config:
+sudo ln -s /etc/nginx/sites-available/fastapi /etc/nginx/sites-enabled/
+sudo systemctl restart nginx
+Access http://<your-vm-external-ip>
+
+## CI/CD Pipeline Setup (GitHub Actions)
+The project uses GitHub Actions for automated deployment.
+
+1️⃣ Setting Up GitHub Secrets
+Go to your GitHub repository → Settings → Secrets and Variables → Actions
+Add the following secrets:
+GCP_SSH_PRIVATE_KEY: Your private SSH key for VM access
+GCP_VM_IP: Your VM’s external IP
+GCP_VM_USER: Your VM username
+2️⃣ CI/CD Workflow (.github/workflows/deploy.yml)
+This workflow:
+Runs tests
+Deploys changes to the Google Cloud VM
+
+3️⃣ Testing the CI/CD Pipeline
+Push changes to main:
+
+git add .
+git commit -m "Updated FastAPI project"
+git push origin main
+Check GitHub Actions:
+Go to GitHub → Actions
+Monitor the deployment process
+Verify deployment:
+Visit http://<vm-external-ip>
+
 ## Contributing
 
 1. Fork the repository
