@@ -32,7 +32,7 @@ jobs:
           echo "${{ secrets.PRIVATE_KEY }}" | tr -d '\r' > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh -o StrictHostKeyChecking=no "${{ secrets.USER }}@${{ secrets.HOST }}" << EOF
-            cd C:\Users\HP\fastapi-book-project
+            cd /home/amakaorabuchi/fastapi-book-project  
             git pull origin main
-            sudo systemctl restart your-fastapi-service
+            sudo systemctl restart fastapi.service
           EOF
